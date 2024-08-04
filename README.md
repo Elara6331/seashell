@@ -1,5 +1,7 @@
 <p align="center">
-<img src="assets/seashell-text.svg" width="250">
+<img src="assets/seashell-text.svg" width="250" alt="Seashell logo"><br><br>
+<a href="https://goreportcard.com/report/go.elara.ws/seashell"><img src="https://goreportcard.com/badge/go.elara.ws/seashell?style=for-the-badge" alt="Go Report Card"></a>&nbsp;
+<a href="https://gitea.elara.ws/Elara6331/seashell/wiki/Home"><img src="https://img.shields.io/badge/read%20the-docs-purple?style=for-the-badge" alt="Read the Docs"></a>
 </p>
 
 ---
