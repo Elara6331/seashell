@@ -46,6 +46,7 @@ var (
 
 func main() {
 	genHash := flag.Bool("gen-hash", false, "Generate an argon2id hash")
+	configPath := flag.String("config", "/etc/seashell.hcl", "The seashell config file to use")
 	flag.Parse()
 
 	if *genHash {
@@ -64,7 +65,7 @@ func main() {
 		return
 	}
 
-	cfg, err := config.Load("seashell.hcl")
+	cfg, err := config.Load(*configPath)
 	if err != nil {
 		log.Error("Error loading config file", slog.Any("error", err))
 		os.Exit(1)
