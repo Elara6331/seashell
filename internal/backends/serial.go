@@ -95,7 +95,7 @@ func Serial(route config.Route) router.Handler {
 				file, baudRate, config = filepath.Join(*opts.Directory, args[0]), args[1], args[2]
 			}
 		}
-		
+
 		if !route.Permissions.IsAllowed(user, filepath.Base(file)) {
 			return router.ErrUnauthorized
 		}

@@ -29,7 +29,7 @@ import (
 type PermissionsMap map[string]map[string][]string
 
 // IsAllowed checks if the user has permissions for all the specified items.
-// 
+//
 // The default policy is deny, and denials take priority, so if one item
 // in items is set to deny, IsAllowed will always return false, even if
 // other items are explicitly allowed.

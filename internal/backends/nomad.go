@@ -150,7 +150,7 @@ func Nomad(route config.Route) router.Handler {
 				return errors.New("task group not found")
 			}
 
-			var taskName = args[2]
+			taskName := args[2]
 			if taskName == "" {
 				taskName = group.Tasks[0].Name
 			}
@@ -189,7 +189,7 @@ func Nomad(route config.Route) router.Handler {
 				}
 			}
 
-			var taskName = args[3]
+			taskName := args[3]
 			if taskName == "" {
 				taskName = group.Tasks[0].Name
 			}

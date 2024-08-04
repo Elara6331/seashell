@@ -47,7 +47,7 @@ type proxySettings struct {
 	UserMap     *cty.Value `cty:"userMap"`
 }
 
-// Proxy is the proxy backend. It returns a handler that establishes a proxy 
+// Proxy is the proxy backend. It returns a handler that establishes a proxy
 // session to a remote server based on the provided configuration.
 func Proxy(route config.Route) router.Handler {
 	return func(sess ssh.Session, arg string) error {
@@ -70,7 +70,7 @@ func Proxy(route config.Route) router.Handler {
 		if opts.User == nil {
 			userMap := ctyObjToStringMap(opts.UserMap)
 			user, _ := sshctx.GetUser(sess.Context())
-			
+
 			if muser, ok := userMap[user.Name]; ok {
 				opts.User = &muser
 			} else {
@@ -100,19 +100,19 @@ func Proxy(route config.Route) router.Handler {
 		if err != nil {
 			return err
 		}
-		
+
 		knownHostHandler, err := goph.DefaultKnownHosts()
 		if err != nil {
 			return err
 		}
-		
+
 		c.Config.Callback = func(host string, remote net.Addr, key gossh.PublicKey) error {
 			println("hi")
 			err = goph.AddKnownHost(host, remote, key, "")
 			if err != nil {
 				return err
 			}
-			return knownHostHandler(host, remote, key) 
+			return knownHostHandler(host, remote, key)
 		}
 
 		baseCmd := sess.Command()
@@ -187,7 +187,7 @@ func sshHandleResize(resizeCh <-chan ssh.Window, cmd *goph.Cmd) {
 
 // readPassword reads a password from the SSH session, sending an asterisk
 // for each character typed.
-// 
+//
 // It handles interrupts (Ctrl+C), EOF (Ctrl+D), and backspace.
 // It returns what it read once it receives a carriage return or a newline.
 func readPassword(sess ssh.Session) (string, error) {
