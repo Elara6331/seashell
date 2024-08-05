@@ -44,7 +44,7 @@ type proxySettings struct {
 	Server      string     `cty:"server"`
 	User        *string    `cty:"user"`
 	PrivkeyPath *string    `cty:"privkey"`
-	UserMap     *cty.Value `cty:"userMap"`
+	UserMap     *cty.Value `cty:"user_map"`
 }
 
 // Proxy is the proxy backend. It returns a handler that establishes a proxy
