@@ -41,6 +41,7 @@ type dockerSettings struct {
 	Command    *cty.Value `cty:"command"`
 	Privileged *bool      `cty:"privileged"`
 	User       *string    `cty:"user"`
+	UserMap    *cty.Value `cty:"user_map"`
 }
 
 // Docker is the docker backend. It returns a handler that connects
@@ -62,6 +63,17 @@ func Docker(route config.Route) router.Handler {
 		if !ok {
 			return errors.New("this route only accepts pty sessions (try adding the -t flag)")
 		}
+		
+		if opts.User == nil {
+			userMap := ctyObjToStringMap(opts.UserMap)
+			user, _ := sshctx.GetUser(sess.Context())
+
+			if muser, ok := userMap[user.Name]; ok {
+				opts.User = &muser
+			} else {
+				opts.User = &user.Name
+			}
+		}
 
 		c, err := client.NewClientWithOpts(
 			client.WithHostFromEnv(),
@@ -70,11 +82,6 @@ func Docker(route config.Route) router.Handler {
 		)
 		if err != nil {
 			return err
-		}
-
-		if opts.User == nil {
-			envUser := sshGetenv(sess.Environ(), "DOCKER_USER")
-			opts.User = &envUser
 		}
 
 		cmd := sess.Command()

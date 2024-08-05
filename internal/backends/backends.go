@@ -22,8 +22,6 @@
 package backends
 
 import (
-	"strings"
-
 	"github.com/zclconf/go-cty/cty"
 	"go.elara.ws/seashell/internal/config"
 	"go.elara.ws/seashell/internal/router"
@@ -82,17 +80,6 @@ func ctyObjToStringMap(o *cty.Value) map[string]string {
 		out[key.AsString()] = val.AsString()
 	}
 	return out
-}
-
-// sshGetenv gets an environment variable from the SSH session
-func sshGetenv(env []string, key string) string {
-	for _, kv := range env {
-		before, after, ok := strings.Cut(kv, "=")
-		if ok && before == key {
-			return after
-		}
-	}
-	return ""
 }
 
 // valueOr returns the value that v points to
