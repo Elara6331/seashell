@@ -42,6 +42,7 @@ import (
 // proxySettings represents settings for the proxy backend.
 type proxySettings struct {
 	Server      string     `cty:"server"`
+	Port        *uint       `cty:"port"`
 	User        *string    `cty:"user"`
 	PrivkeyPath *string    `cty:"privkey"`
 	UserMap     *cty.Value `cty:"user_map"`
@@ -77,6 +78,11 @@ func Proxy(route config.Route) router.Handler {
 				opts.User = &user.Name
 			}
 		}
+		
+		if opts.Port == nil {
+			port := uint(22)
+			opts.Port = &port
+		}
 
 		auth := goph.Auth{
 			gossh.PasswordCallback(requestPassword(opts, sess)),
@@ -96,23 +102,25 @@ func Proxy(route config.Route) router.Handler {
 			auth = append(goph.Auth{gossh.PublicKeys(pk)}, auth...)
 		}
 
-		c, err := goph.New(*opts.User, opts.Server, auth)
+		c, err := goph.NewConn(&goph.Config{
+			Auth: auth,
+			User: *opts.User,
+			Addr: opts.Server,
+			Port: *opts.Port,
+			Callback: func(host string, remote net.Addr, key gossh.PublicKey) error {
+				found, err := goph.CheckKnownHost(host, remote, key, "")
+				if !found {
+					if err = goph.AddKnownHost(host, remote, key, ""); err != nil {
+						return err
+					}
+				} else if err != nil {
+					return err
+				}
+				return nil
+			},
+		})
 		if err != nil {
 			return err
-		}
-
-		knownHostHandler, err := goph.DefaultKnownHosts()
-		if err != nil {
-			return err
-		}
-
-		c.Config.Callback = func(host string, remote net.Addr, key gossh.PublicKey) error {
-			println("hi")
-			err = goph.AddKnownHost(host, remote, key, "")
-			if err != nil {
-				return err
-			}
-			return knownHostHandler(host, remote, key)
 		}
 
 		baseCmd := sess.Command()
