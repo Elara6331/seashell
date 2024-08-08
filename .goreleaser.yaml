@@ -1,0 +1,70 @@
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - id: seashell
+    env:
+      - CGO_ENABLED=0
+    binary: seashell
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - "386"
+      - arm64
+      - arm
+      - riscv64
+archives:
+  - files:
+      - seashell.service
+nfpms:
+  - id: seashell
+    description: "SSH server with virtual hosts and username-based routing"
+    homepage: 'https://gitea.elara.ws/Elara6331/seashell'
+    maintainer: 'Elara Ivy <elara@elara.ws>'
+    license: AGPLv3
+    formats:
+      - deb
+      - rpm
+      - apk
+      - archlinux
+    provides:
+      - seashell
+    conflicts:
+      - seashell
+    contents:
+      - src: seashell.service
+        dst: /etc/systemd/system/seashell.service
+aurs:
+  - name: seashell-bin
+    description: "SSH server with virtual hosts and username-based routing"
+    homepage: 'https://gitea.elara.ws/Elara6331/seashell'
+    maintainers:
+      - 'Elara Ivy <elara@elara.ws>'
+    license: AGPLv3
+    private_key: '{{ .Env.AUR_KEY }}'
+    git_url: 'ssh://aur@aur.archlinux.org/seashell-bin.git'
+    provides:
+      - seashell
+    conflicts:
+      - seashell
+    package: |-
+      # binaries
+      install -Dm755 ./seashell "${pkgdir}/usr/bin/seashell"
+      
+      # services
+      install -Dm644 ./seashell.service "${pkgdir}/etc/systemd/system/seashell.service"      
+release:
+  gitea:
+    owner: Elara6331
+    name: seashell
+gitea_urls:
+  api: 'https://gitea.elara.ws/api/v1/'
+  download: 'https://gitea.elara.ws'
+  skip_tls_verify: false
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+changelog:
+  sort: asc

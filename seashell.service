@@ -1,0 +1,11 @@
+[Unit]
+Description=Seashell SSH Server
+After=network.target
+
+[Service]
+ExecStart=seashell
+Restart=always
+StandardOutput=journal
+
+[Install]
+WantedBy=default.target
