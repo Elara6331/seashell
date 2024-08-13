@@ -27,6 +27,8 @@ import (
 	"io"
 	"net"
 	"os"
+	"path"
+	"strconv"
 	"strings"
 
 	"github.com/gliderlabs/ssh"
@@ -41,8 +43,8 @@ import (
 
 // proxySettings represents settings for the proxy backend.
 type proxySettings struct {
-	Server      string     `cty:"server"`
-	Port        *uint       `cty:"port"`
+	Host        *string    `cty:"host"`
+	Hosts       *cty.Value `cty:"hosts"`
 	User        *string    `cty:"user"`
 	PrivkeyPath *string    `cty:"privkey"`
 	UserMap     *cty.Value `cty:"user_map"`
@@ -78,14 +80,51 @@ func Proxy(route config.Route) router.Handler {
 				opts.User = &user.Name
 			}
 		}
-		
-		if opts.Port == nil {
-			port := uint(22)
-			opts.Port = &port
+
+		var matched bool
+		var addr, portstr string
+		if opts.Host == nil {
+			hosts := ctyTupleToStrings(opts.Hosts)
+			if len(hosts) == 0 {
+				return errors.New("no host configuration provided")
+			}
+			
+			for _, hostPattern := range hosts {
+				addr, portstr, ok = strings.Cut(hostPattern, ":")
+				if !ok {
+					// addr is already set by the above statement, so just set the default port
+					portstr = "22"
+				}
+
+				matched, err = path.Match(addr, arg)
+				if err != nil {
+					return err
+				}
+
+				if matched {
+					addr = arg
+					break
+				}
+			}
+		} else {
+			addr, portstr, ok = strings.Cut(*opts.Host, ":")
+			if !ok {
+				// addr is already set by the above statement, so just set the default port
+				portstr = "22"
+			}
+		}
+
+		if !matched {
+			return errors.New("provided argument doesn't match any host patterns in configuration")
+		}
+
+		port, err := strconv.ParseUint(portstr, 10, 16)
+		if err != nil {
+			return err
 		}
 
 		auth := goph.Auth{
-			gossh.PasswordCallback(requestPassword(opts, sess)),
+			gossh.PasswordCallback(requestPassword(opts, sess, addr)),
 		}
 
 		if opts.PrivkeyPath != nil {
@@ -105,8 +144,8 @@ func Proxy(route config.Route) router.Handler {
 		c, err := goph.NewConn(&goph.Config{
 			Auth: auth,
 			User: *opts.User,
-			Addr: opts.Server,
-			Port: *opts.Port,
+			Addr: addr,
+			Port: uint(port),
 			Callback: func(host string, remote net.Addr, key gossh.PublicKey) error {
 				found, err := goph.CheckKnownHost(host, remote, key, "")
 				if !found {
@@ -173,9 +212,9 @@ func Proxy(route config.Route) router.Handler {
 }
 
 // requestPassword asks the client for the remote server's password
-func requestPassword(opts proxySettings, sess ssh.Session) func() (secret string, err error) {
+func requestPassword(opts proxySettings, sess ssh.Session, addr string) func() (secret string, err error) {
 	return func() (secret string, err error) {
-		_, err = fmt.Fprintf(sess.Stderr(), "Password for %s@%s: ", *opts.User, opts.Server)
+		_, err = fmt.Fprintf(sess.Stderr(), "Password for %s@%s: ", *opts.User, addr)
 		if err != nil {
 			return "", err
 		}

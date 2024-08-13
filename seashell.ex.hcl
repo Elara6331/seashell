@@ -20,7 +20,16 @@ route "srv" {
     backend = "proxy"
     match = "srv"
     settings = {
-        server = "1.2.3.4"
+        host = "1.2.3.4"
+        privkey = "/home/elara/.ssh/id_ed25519"
+    }
+}
+
+route "cluster" {
+    backend = "proxy"
+    match = "cluster\\.(.+)"
+    settings = {
+        hosts = ["node*", "nas", "192.168.1.*"]
         privkey = "/home/elara/.ssh/id_ed25519"
     }
 }

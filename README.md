@@ -66,7 +66,7 @@ See the [serial](https://gitea.elara.ws/Elara6331/seashell/wiki/Backends#serial)
 
 Seashell can proxy another SSH server. In this case, your client will authenticate to seashell and then seashell will authenticate to the target server, so you should provide seashell with a private key to use for authentication and encryption. If you don't provide this, seashell will ask the authenticating user for the target server's password.
 
-The proxy backend takes no extra arguments, so the `ssh` command only requires your username and the routing path:
+Here's an example command:
 
 ```bash
 ssh user:myproxy@ssh.example.com
