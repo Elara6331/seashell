@@ -55,9 +55,6 @@ type proxySettings struct {
 func Proxy(route config.Route) router.Handler {
 	return func(sess ssh.Session, arg string) error {
 		user, _ := sshctx.GetUser(sess.Context())
-		if !route.Permissions.IsAllowed(user, "*") {
-			return router.ErrUnauthorized
-		}
 
 		var opts proxySettings
 		err := gocty.FromCtyValue(route.Settings, &opts)
@@ -81,22 +78,23 @@ func Proxy(route config.Route) router.Handler {
 			}
 		}
 
-		var matched bool
-		var addr, portstr string
+		matched := false
+		addr := arg
+		var portstr, pattern string
 		if opts.Host == nil {
 			hosts := ctyTupleToStrings(opts.Hosts)
 			if len(hosts) == 0 {
 				return errors.New("no host configuration provided")
 			}
-			
+
 			for _, hostPattern := range hosts {
-				addr, portstr, ok = strings.Cut(hostPattern, ":")
+				pattern, portstr, ok = strings.Cut(hostPattern, ":")
 				if !ok {
 					// addr is already set by the above statement, so just set the default port
 					portstr = "22"
 				}
 
-				matched, err = path.Match(addr, arg)
+				matched, err = path.Match(pattern, arg)
 				if err != nil {
 					return err
 				}
@@ -112,6 +110,10 @@ func Proxy(route config.Route) router.Handler {
 				// addr is already set by the above statement, so just set the default port
 				portstr = "22"
 			}
+		}
+
+		if !route.Permissions.IsAllowed(user, addr) {
+			return router.ErrUnauthorized
 		}
 
 		if !matched {
